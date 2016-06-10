@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html ng-app="MotoApp">
+<head>
+	<title>Listado de Motos</title>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" integrity="sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==" crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap-theme.min.css" integrity="sha384-aUGj/X2zp5rLCbBxumKTCw2Z50WgIr1vs/PFN4praOTvYXWlVyh2UtNUU0KAUhAX" crossorigin="anonymous">
+
+</head>
+<body>
+	<div class="container" ng-controller="AppCtrl">
+		<h1>Motos</h1>
+		<table class="table">
+			<thead>
+				<tr>
+					<th>Marca</th>
+					<th>Modelo</th>
+					<th>Precio</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><input id="1" class="form-control" ng-model="motos.marca"/></td>
+					<td><input id="2" class="form-control" ng-model="motos.modelo"/></td>
+					<td><input id="3" class="form-control" ng-model="motos.precio"/></td>
+					<td><button class="btn btn-primary" ng-click="addMoto()">Add</button></td>
+				</tr>
+				<tr ng-repeat="motos in motolist">
+					<td>{{motos.marca}}</td>
+					<td>{{motos.modelo}}</td>
+					<td>{{motos.precio}}</td>
+					<td><button class="btn btn-danger" ng-click="deleteMoto(motos.modelo)">Delete</button></td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
+	<script type="text/javascript" src="controllersMotos.js"></script>
+
+
+</body>
+</html>
