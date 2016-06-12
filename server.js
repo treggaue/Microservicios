@@ -20,6 +20,7 @@ var db2 = new DataStore({
 	});
 
 console.log('DBs initialized');
+console.log('dbFileNameCoche');
 
 db1.find({},function (err,coches){
 
@@ -119,7 +120,7 @@ db2.find({},function (err,motos){
 app.get('/motos/:motos.html',function(req,res){
 	console.log('New GET request');
 
-	db2.findMotos({},function (err,motos){
+	db2.find({},function (err,motos){
 		res.json(motos);
 	});
 });
@@ -135,7 +136,7 @@ app.get('/motos/:motos.html/:modelo',function(req,res){
 	var n = req.params.modelo;
 	console.log('New GET request for moto with name '+n);
 
-	db2.findMotos({ modelo : n},function (err,motos){
+	db2.find({ modelo : n},function (err,motos){
 		console.log("Motos obtained: "+motos.length);
 		if(motos.length  > 0){
 			res.send(motos[0]);
