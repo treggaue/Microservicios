@@ -26,6 +26,13 @@ governify.control = function(app, opt){
 					//asyncronousCalculation
 					callback( parseInt(actualValue) + 1 );
 				}
+			},
+			{
+				metric: 'AVGResponseTime',
+				calculate: function(actualValue, req, res, callback){
+					//asyncronousCalculation
+					callback( res._headers['x-response-time'] );
+				}
 			}
 		]
 	}
@@ -37,11 +44,9 @@ governify.control = function(app, opt){
 	try{
 
 		//add middleware for calculate response time
-		app.use(options.defaultPath, responseTime(function(req, res, time){
-			addResponseTime(options, req, res, time);										
-		}));
+		app.use(responseTime());
 
-		//add middleware for check SLA 
+		//add middleware for check SLA
 		for(var m in options.metrics){
 			var metric = options.metrics[m];
 			if(metric.term)
@@ -64,7 +69,7 @@ governify.control = function(app, opt){
 function guaranteeIsComplied(options, term, metric, method, calculate){
 	logger.info("Created middleware to control " + term + " term");
 	return function(req, res, next){
-		if(req.method == method || method == ""){
+		if(method.indexOf(req.method) != -1 || method == ""){
 			logger.info("Checking if " + term + " is fulfilled...");
 			if(!req.query){
 				req.query = url.parse(req.url, true).query;
@@ -78,16 +83,16 @@ function guaranteeIsComplied(options, term, metric, method, calculate){
 						logger.info(body);
 
 						if(body === "true"){
-							next();	
+							next();
 
 						}else{
 							sendErrorResponse(429, 'Unauthorized! Too many requests.', res);
-						}			
+						}
 					}else{
 						sendErrorResponse(402, 'Unauthorized! please check your SLA.', res)
 					}
 				});
-			} 
+			}
 		}else{
 			next();
 		}
@@ -97,7 +102,8 @@ function guaranteeIsComplied(options, term, metric, method, calculate){
 function updateVariable(options, metric, method, calculate){
 	logger.info("Created middleware to update " + metric + " metric");
 	return function(req, res, next){
-		if(req.method == method || method == ""){
+		next();
+		if(method.indexOf(req.method) != -1 || method == ""){
 			if(!req.query){
 				req.query = url.parse(req.url, true).query;
 			}
@@ -105,7 +111,7 @@ function updateVariable(options, metric, method, calculate){
 				sendErrorResponse(401, 'Unauthorized! please check the user query param', res);
 			}else{
 				var propertyUrl = options.datastore + options.namespace + "agreements/" + req.query[options.apiKeyVariable] + "/properties/" + metric;
-				next();
+
 				request(propertyUrl, function(error, response, body){
 					if(!error && response.statusCode == 200 ){
 						var property = JSON.parse(body);
@@ -114,7 +120,7 @@ function updateVariable(options, metric, method, calculate){
 							property.value = value + '';
 							request.post({url: propertyUrl, body : JSON.stringify(property), headers:{'Content-Type':'application/json'}}, function(error, response, body){
 								if(!error){
-									logger.info(metric.toUpperCase() + " property has been updated.");							
+									logger.info(metric.toUpperCase() + " property has been updated.");
 								}else{
 									logger.info("Has occurred an error while it tried update " + metric + " property.");
 								}
@@ -129,28 +135,7 @@ function updateVariable(options, metric, method, calculate){
 		}else{
 			next();
 		}
-	}	
-}
-
-function addResponseTime(options, req, res, time){
-	var propertyUrl = options.datastore + options.namespace +  "agreements/" + req.query[options.apiKeyVariable] + "/properties/" + "AVGResponseTime";
-	var property = {
-		id : "AVGResponseTime",
-		metric : "int",
-		scope : "Global",
-		value : time+""
 	}
-
-	if(res.statusCode >= 200 && res.statusCode < 300){
-		request.post({url: propertyUrl, body : JSON.stringify(property), headers:{'Content-Type':'application/json'}}, function(error, response, body){
-			if(!error){
-				logger.info("AVGResponseTime"+ " property has been updated.");
-			}else{
-				logger.info("Has occurred an error while it tried update " + "AVGResponseTime" + " property");
-			}
-		});
-	}
-
 }
 
 //add suppot to Connect, modifing returned options
@@ -174,16 +159,13 @@ function applyOptionsPolicy(options, opt){
 		if(opt.datastore)
 			options.datastore = opt.datastore;
 		if(opt.namespace)
-			options.namespace = opt.namespace;	
+			options.namespace = opt.namespace;
 		if(opt.apiKeyVariable)
 			options.apiKeyVariable = opt.apiKeyVariable;
 		if(opt.defaultPath)
 			options.defaultPath = opt.defaultPath;
-		if(opt.customMetrics){
-			for(var m in opt.customMetrics){
-				options.metrics.push(opt.customMetrics[m]);
-			}
-		}
+		if(opt.customMetrics)
+			options.metrics = opt.customMetrics;
 
 		for(var m in options.metrics){
 			if(!options.metrics[m].path)
@@ -191,7 +173,7 @@ function applyOptionsPolicy(options, opt){
 			if(!options.metrics[m].method)
 				options.metrics[m].method = "";
 		}
-		
+
 	}
 
 	//add "/" to end url.

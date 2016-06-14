@@ -3,10 +3,62 @@ var path = require('path');
 var fs = require('fs');
 var bodyParser = require('body-parser');
 var DataStore = require('nedb');
+var governify = require("governify");
 
 var port = (process.env.PORT || 10000);
 
 var app = express();
+
+//governify.control(app,{namespace:'g4', defaultPath:'/ListasVehiculosAPI'});
+
+governify.control(app, options = { namespace: 'g4', apiKeyVariable:'apikey', defaultPath:'/ListasVehiculosAPI',
+    customMetrics: [
+        {
+        	path:"/ListasVehiculosAPI",
+            method: "POST,DELETE",
+            term: "RequestTerm",
+            metric: "Requests",
+            calculate: function(currentValue, req, res, callback){
+                //asyncronousCalculation
+                callback( parseInt(actualValue) + 1 );
+            }
+        }
+       /* {
+            method: 'POST',
+            term: 'SizeBBDD',
+            metric: 'TamBBDD',
+            calculate: function(currentValue, req, res, callback){
+                //asyncronousCalculation
+                callback( path.join(__dirname,'motos.json').length() );
+            }
+        } */
+    ]
+});  
+
+//governify.control(app, options = {
+//    namespace: "mrg",
+//    defaultPath: "/api",
+//    customMetrics: [
+//        {
+//            method: 'POST,GET, DELETE',
+//            term: 'RequestTerm',
+//            metric: 'Requests',
+//            calculate: function(currentValue, req, res, callback){
+                //asyncronousCalculation
+//                callback( parseInt(actualValue) + 1 );
+//            }
+//        },
+//        {
+//            method: 'POST',
+//            term: 'SizeBBDD',
+//            metric: 'TamBBDD',
+//            calculate: function(currentValue, req, res, callback){
+//                //asyncronousCalculation
+//                callback( path.join(__dirname,'motos.json').length() );
+//            }
+//        }
+//    ]
+//});
 
 var dbFileNameCoche  = path.join(__dirname,'coches.json');
 var dbFileNameMoto  = path.join(__dirname,'motos.json');
@@ -50,7 +102,7 @@ db1.find({},function (err,coches){
 app.use(express.static(__dirname+"/public"));
 app.use(bodyParser.json());
 
-app.get('/coches/:coches.html',function(req,res){
+app.get('/coches/:index.html',function(req,res){
 	console.log('New GET request');
 
 	db1.find({},function (err,coches){
@@ -58,14 +110,14 @@ app.get('/coches/:coches.html',function(req,res){
 	});
 });
 
-app.post('/coches/:coches.html',function(req,res){
+app.post('/coches/:index.html',function(req,res){
 	console.log('New POST request');
 	console.log(req.body);
 	db1.insert(req.body);
 	res.sendStatus(200);
 });
 
-app.get('/coches/:coches.html/:modelo',function(req,res){
+app.get('/coches/:index.html/:modelo',function(req,res){
 	var n = req.params.modelo;
 	console.log('New GET request for coche with name '+n);
 
@@ -79,7 +131,7 @@ app.get('/coches/:coches.html/:modelo',function(req,res){
 	});
 });
 
-app.delete('/coches/:coches.html/:modelo',function(req,res){
+app.delete('/coches/:index.html/:modelo',function(req,res){
 	var n = req.params.modelo;
 	console.log('New DELETE request for coche with name '+n);
 
@@ -117,7 +169,7 @@ db2.find({},function (err,motos){
 
 });
 
-app.get('/motos/:motos.html',function(req,res){
+app.get('/motos/:index.html',function(req,res){
 	console.log('New GET request');
 
 	db2.find({},function (err,motos){
@@ -125,14 +177,14 @@ app.get('/motos/:motos.html',function(req,res){
 	});
 });
 
-app.post('/motos/:motos.html',function(req,res){
+app.post('/motos/:index.html',function(req,res){
 	console.log('New POST request');
 	console.log(req.body);
 	db2.insert(req.body);
 	res.sendStatus(200);
 });
 
-app.get('/motos/:motos.html/:modelo',function(req,res){
+app.get('/motos/:index.html/:modelo',function(req,res){
 	var n = req.params.modelo;
 	console.log('New GET request for moto with name '+n);
 
@@ -146,7 +198,7 @@ app.get('/motos/:motos.html/:modelo',function(req,res){
 	});
 });
 
-app.delete('/motos/:motos.html/:modelo',function(req,res){
+app.delete('/motos/:index.html/:modelo',function(req,res){
 	var n = req.params.modelo;
 	console.log('New DELETE request for moto with name '+n);
 
